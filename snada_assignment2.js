@@ -14,23 +14,23 @@ function createVector(x, y){
   };
   
   vector.add = function(vector){
-      return createVector(this.x + vector.getX(), this.y + vector.getY());
+    return createVector(_x + vector.getX(), _y + vector.getY());
   };
     
   vector.sub = function(vector){
-    return createVector(this.x - vector.getX(), this.y - vector.getY());
+    return createVector(_x - vector.getX(), _y - vector.getY());
   };
 
   vector.getX = function(){
-    return this.x;
+    return _x;
   };
 
   vector.getY = function(){
-    return this.y;
+    return _y;
   };
 
   vector.len = function(){
-    return Math.sqrt(x*x + y*y);
+    return Math.sqrt(_x*_x + _y*_y);
   };
 
   return vector;

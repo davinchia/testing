@@ -1,7 +1,7 @@
 //checks if the vector is a vector type; used to check add and sub functions
 //this assumes that 
 function testEqualVector(vec, x, y) {
-  if (Object.keys(vec).sort().toString() != "add,getX,getY,len,sub") {
+  if (Object.keys(vec).sort().toString() !== "add,getX,getY,len,sub") {
     return false;
   }
   if (vec.getX() != x) {
@@ -16,7 +16,6 @@ function testEqualVector(vec, x, y) {
   }
   return true;
 }
-
 
 //module to test vectors; vectors have getX, getY, len, add and sub
 QUnit.module("CeateVector Tests", {
@@ -36,6 +35,7 @@ QUnit.test("vector tests", function(assert){
   //note that the test for the add and sub functions rely on an external function
   //zero vector
   var zeroV = createVector(0,0);
+  console.log(zeroV);
   assert.equal(zeroV.getX(), 0, "testing zero vectorX");
   assert.equal(zeroV.getY(), 0, "testing zero vectorY");
   assert.equal(zeroV.len(), 0, "testing zero vector length");
