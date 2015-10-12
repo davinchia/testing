@@ -412,3 +412,19 @@ QUnit.test("badSearchQueries", function(assert){
     var query1 = [];
     var query2 = {};
 });
+
+
+
+
+// ==========================  TestRemove  ============================ \\
+
+//this function when the remove operation is returning a long list
+function testEqualItemList() {
+
+}
+
+//this function tests within an item object contains the correct properties 
+function testEqualItem(item, obj) {
+    
+
+}
