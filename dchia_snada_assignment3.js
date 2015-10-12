@@ -196,6 +196,21 @@ QUnit.module("createLibrary::testAdd",
  * @return true if item and objectLiteral have the exact same properties and values for those properties.
  */
 var itemEquals = function(item, objectLiteral){
+
+    //if author or title is not provided, set to unknown
+    if (objectLiteral["type"] === "book" && !("author" in objectLiteral)){
+       objectLiteral["author"] = "unknown";
+    } 
+    else if (objectLiteral["type"] === "music" && !("artist" in objectLiteral)){
+        objectLiteral["artist"] = "unknown";
+    }
+    else if(objectLiteral["type"] === "video" && ! ("director" in objectLiteral)){
+        objectLiteral["director"] = "unknown";
+    }
+
+    if(! ("title" in objectLiteral))
+       objectLiteral["title"] = "unknown";
+
     var keys = Object.keys(objectLiteral);
 
     if(item.properties().sort().toString() !== keys.sort().toString())
@@ -282,6 +297,7 @@ QUnit.test("changeUndefinedToUnknown", function(assert){
     assert.equal(book[0].get("author"), "unknown", "test unknown book author");
 
     var video = library.find({type:'video'});
+    console.log("video: " + video[0].get("title"));
     assert.equal(video[0].get("title"),"unknown","test unknown video title");
     assert.equal(video[0].get("director"), "unknown", "test unknown video director");
     assert.equal(video[0].get("year"), "unknown", "test unknown video year");
@@ -302,6 +318,7 @@ QUnit.test("mergeDuplicates", function(assert){
    
     item['year'] = 2016;
     library.add(item);
+    console.log("year: " + retrieved[0]['year']);
     retrieved = library.find({type:'book'});
     assert.equal(retrieved.length, 1, "No duplicate was created");
     assert.ok(itemEquals(retrieved[0], item), "Verify all properties are correct");
@@ -388,12 +405,13 @@ QUnit.module("createLibrary::testFind",  {
 });
 
 QUnit.test("findAllObjectsWithProperties", function(assert){
+    //find original object
     var booksBySherif = library.find({author:'sherif'});
     assert.equal(booksBySherif.length, 2, "Find by author property");
 
     var UTSAndReligion = library.find({author:'sherif', title:'Unit Testing vs Religion'});
     assert.equal(UTSAndReligion.length, 1, "Find by author and title properties", "Test ");
-    assert.equal(UTSAndReligion.get("title"), "Unit Testing vs Religion", "Test get title property");
+    assert.equal(UTSAndReligion[0].get("title"), "Unit Testing vs Religion", "Test get title property");
 
     var allBooks = library.find({type:'book'});
     assert.equal(allBooks.length, 3, "Find by book type property");
@@ -406,14 +424,16 @@ QUnit.test("findAllObjectsWithProperties", function(assert){
 
     var musicByAbott = library.find({artist:"Abott"});
     assert.equal(musicByAbott.length, 2, "Find artist who is member of a group");
-
 });
 
 QUnit.test("badSearchQueries", function(assert){
-
     var emptySearch = library.find({});
 
     var nonExistentItem = library.find({artist:"Snoop Dogg"});
     assert.equal(nonExistentItem.length, 0, "Find nonExistentItem");
 });
+
+
+// ==========================  TestRemove ============================ \\
+
 

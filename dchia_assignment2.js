@@ -1,7 +1,4 @@
-var exports = exports || {};
-
-(function(app){
-  app.createVector = function(x,y) {
+function createVector(x,y) {
   var X = x;  //private 
   var Y = y;  //private
   
@@ -40,21 +37,29 @@ var exports = exports || {};
   };
   
   return vector; //return the closure
-};
+}
 
-  app.createLibrary = function() {
-    function createLibrary() {
+function createLibrary() {
   var __books = [];
   var __videos = [];
   var __music = [];
-
+  
+  var __bookUnknown = false;
+  var __videoUnknown = false;
+  var __musicUnknown = false;
+  
   //basic item class; takes in the private item attribute and obj
   function item(__attributes, obj) {
     var index = Object.keys(obj).sort();
 
     for (var i = 0; i < index.length; i++) {
-      __attributes[index[i]] = obj[index[i]];
+      if (obj[index[i]] === undefined) {
+        __attributes[index[i]] = "unknown";  
+      } else {
+        __attributes[index[i]] = obj[index[i]];
+      }
     }
+      
 
     if (__attributes.title === undefined) {
       __attributes.title = "unknown";
@@ -64,7 +69,12 @@ var exports = exports || {};
     this.set = function(obj) {
       var prop = Object.keys(obj).sort();
       for (var i = 0; i < prop.length; i++) {
-        __attributes[prop[i]] = obj[prop[i]];
+        if (obj[prop[i]] === undefined) {
+          __attributes[prop[i]] = "unknown"; 
+        } else {
+          __attributes[prop[i]] = obj[prop[i]];
+      
+        }
       }
     };
 
@@ -77,10 +87,20 @@ var exports = exports || {};
     this.properties = function() {
       return Object.keys(__attributes);
     };
+
+    //testing
+    this.printProp = function() {
+      var index = Object.keys(__attributes);
+      for (var i = 0; i < index.length; i++) {
+        console.log(__attributes[index[i]]);
+      }
+    };
   }
 
   //function that helps compares arrays
   function compareArray(arr1, arr2) {
+    console.log("first: " + arr1);
+    console.log("second: " + arr2);
     if (!arr1 || !arr2 || arr1.length !== arr2.length) {
       return false;
     }
@@ -97,6 +117,7 @@ var exports = exports || {};
         return false;
       }
     }
+    console.log(true);
     return true;
   }
 
@@ -141,7 +162,8 @@ var exports = exports || {};
     }
     return item;
   }
-
+  
+  //This is used when adding;
   //private function to compare objects; assume that we are merging objects from the start
   function compareAll(arr, obj) {
     var objIndex = Object.keys(obj); //keys to the obj's properties
@@ -150,6 +172,9 @@ var exports = exports || {};
       var currObj = arr[index[i]]; //get current object;
       for (var j = 0; j < objIndex.length; j++) {
         //comparing, bearing in mind arrays are a possible value 
+        if (obj[objIndex[j]] === undefined) {
+          obj[objIndex[j]] = "unknown";  //just in case we have undefined values, we change them to unknown before checking
+        }
         if (currObj.get(objIndex[j]) !== undefined) {
           if (currObj.get(objIndex[j]) instanceof Array && obj[objIndex[j]] instanceof Array) {
             if (!compareArray(currObj.get(objIndex[j]), obj[objIndex[j]])) {
@@ -169,17 +194,32 @@ var exports = exports || {};
     return false;
   }
 
-  //This function is used to check whether the item is already in the library;
   //checks whether the relevant array already contains the item
+  //make sure to check if we already contain an item that has its required fields as unknown
   function contains(arr, obj) {
     if (obj.type === "book") {
-      return compareAll(__books, obj);
+      if (Object.keys(obj).length == 1 && !__bookUnknown) {
+        __bookUnknown = true;
+        return false;
+      } else {
+        return compareAll(__books, obj);
+      }
     }
     if (obj.type === "music") {
-      return compareAll(__music, obj);
+      if (Object.keys(obj).length == 1 && !__musicUnknown) {
+        __musicUnknown = true;
+        return false;
+      } else {
+        return compareAll(__music, obj);
+      }
     }
     if (obj.type === "video") {
-      return compareAll(__videos, obj);
+       if (Object.keys(obj).length == 1 && !__videoUnknown) {
+        __videoUnknown = true;
+        return false;
+      } else {
+        return compareAll(__videos, obj);
+      }
     }
   }
 
@@ -216,6 +256,11 @@ var exports = exports || {};
     for (var i = 0; i < currIndex.length; i++) {
       var currCom = arr[currIndex[i]];
       for (var j = 0; j < objIndex.length; j++) {
+        if (obj.get(objIndex[j]) === undefined) {
+          var change = [];   //switch all the variables in the item to unknown
+          change[objIndex[j]] = "unknown";
+          obj.set(change);
+        }
         if (obj.get(objIndex[j]) instanceof Array && currCom.get(objIndex[j]) instanceof Array) {
           if (!compareArray(obj.get(objIndex[j]), currCom.get(objIndex[j]))) {
             break;
@@ -227,7 +272,8 @@ var exports = exports || {};
         }
         if (j == objIndex.length - 1) {
           if (remove) {
-            arr = arr.splice(i, 1);
+            arr.splice(i, 1);
+            j--;
           }
           return currCom;
         }
@@ -240,26 +286,31 @@ var exports = exports || {};
     var toDelete = [];
     var objIndex = Object.keys(obj); //get all the properties of obj
     for (var i = 0; i < arr.length; i++) {
-      var collection = arr[i]; //the current array we are searching
-      var currIndex = Object.keys(collection); //index for the current array
-      for (var j = 0; j < currIndex.length; j++) {
-        var currObj = collection[currIndex[j]];
+      for (var j = 0; j < arr[i].length; j++) { //check the individual collections
+        var currObj = arr[i][j];
         for (var k = 0; k < objIndex.length; k++) {
-          if (currObj.get(objIndex[k]) === undefined) {
+          if (obj[objIndex[k]] === undefined) {
+            obj[objIndex[k]] = "unknown"; //change this field to unknown, since this is what we are doing
+          }
+          if (currObj.get(objIndex[k]) === undefined) { //the field itself does not exist in the object
              break;
-          } else if (currObj.get(objIndex[k]) instanceof Array) { //find something within the list/array
+          } else if (currObj.get(objIndex[k]) instanceof Array && obj[objIndex[k]] instanceof Array) { //find something within the list/array
+            if (!compareArray(currObj.get(objIndex[k]), obj[objIndex[k]])) {
+              break;              
+            }
+          }  else if (currObj.get(objIndex[k]) instanceof Array) {
             if (currObj.get(objIndex[k]).indexOf(obj[objIndex[k]]) < 0) {
               break;
             }
-
-          } else {
-            if (currObj.get(objIndex[k]) !== obj[objIndex[k]]) {
+          }  else {
+            if (currObj.get(objIndex[k]) != obj[objIndex[k]]) {
               break;
             }
           }
           if (k === objIndex.length - 1) {
+            //remove objects
             if (remove) {
-              collection = collection.splice(j, 1);
+              arr[i].splice(j, 1);
               j--;
             }
             toDelete.push(currObj); //return objects that have no conflicts 
@@ -269,7 +320,7 @@ var exports = exports || {};
     }
     return toDelete; //return all objects with no conflicts
   }
-
+  
   //merge the items; we use the set function for the old item because we know that no properties in the new item clash with it
   function merge(old, update) {
     old.set(update);
@@ -342,8 +393,51 @@ var exports = exports || {};
     return edit(obj, false);
   };
 
+  //testing functions; remember to delete these!!!!
+  library.printBooks = function() {
+    var index = Object.keys(__books);
+    for (var i = 0; i < index.length; i++) {
+      var curr = __books[index[i]];
+      var currIndex = curr.properties();
+      for (var j = 0; j < currIndex.length; j++) {
+        console.log(currIndex[j] + ": " + curr.get(currIndex[j]));
+      }
+    }
+  };
+
+  library.printMusic = function() {
+    var index = Object.keys(__music);
+    for (var i = 0; i < index.length; i++) {
+      var curr = __music[index[i]];
+      var currIndex = curr.properties();
+      for (var j = 0; j < currIndex.length; j++) {
+        console.log(currIndex[j] + ": " + curr.get(currIndex[j]));
+      }
+    }
+  };
+
+  library.printVideo = function() {
+    var index = Object.keys(__videos);
+    for (var i = 0; i < index.length; i++) {
+      var curr = __videos[index[i]];
+      var currIndex = curr.properties();
+      for (var j = 0; j < currIndex.length; j++) {
+        console.log(currIndex[j] + ": " + curr.get(currIndex[j]));
+      }
+    }
+  };
+
+  library.give = function() {
+    return __books[0];
+  };
+
   return library;
 }
-  }
 
+  
+var exports = exports || {};
+
+(function(app){
+    app.createVector = createVector;
+    app.createLibrary = createLibrary;
 })(exports);
