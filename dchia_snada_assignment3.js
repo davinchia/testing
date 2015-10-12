@@ -188,6 +188,29 @@ QUnit.module("createLibrary::testAdd",
 );
 
 
+//function that helps compares arrays; we need strict equality; we do not support subsets of lists
+function compareArray(arr1, arr2) {
+    console.log("first: " + arr1);
+    console.log("second: " + arr2);
+    if (!arr1 || !arr2 || arr1.length !== arr2.length) {
+      return false;
+    }
+    arr1 = arr1.sort();
+    arr2 = arr2.sort(); //sort so we can do element by element comparison
+    for (var i = 0, l = arr1.length; i < l; i++) {
+      // Check if we have nested arrays
+      if (arr1[i] instanceof Array && arr2[i] instanceof Array) {
+        // recurse into the nested arrays
+        if (!compareArray(arr1[i], arr2[i]))
+          return false;
+      } else if (arr1[i] != arr2[i]) {
+        //Warning - does not handle for two different object instances
+        return false;
+      }
+    }
+    console.log(true);
+    return true;
+}
 
 /**
  * Compares an Item object to an object literal. 
@@ -213,9 +236,6 @@ var itemEquals = function(item, objectLiteral){
 
     var keys = Object.keys(objectLiteral);
 
-    if(item.properties().sort().toString() !== keys.sort().toString())
-        return false;
-
     for(var i = 0; i < keys.length; i++){
         if (item.get(keys[i]).toString() !== objectLiteral[keys[i]].toString())
           return false;
@@ -223,6 +243,34 @@ var itemEquals = function(item, objectLiteral){
 
     return true;
 }
+
+
+//this function is used to test subset;
+var itemEqualsSubset = function(item, objectLiteral){
+    var keys = Object.keys(objectLiteral);
+
+    for(var i = 0; i < keys.length; i++){
+        if (item.get(keys[i]) instanceof Array) {
+            if (objectLiteral[keys[i]] instanceof Array) {
+                if (!compareArray(item.get(keys[i]), objectLiteral[keys[i]])) {
+                    console.log(1);
+                    return false;
+                }
+            } else {
+                if (item.get(keys[i]).indexOf(objectLiteral[keys[i]]) < 0) {
+                    console.log(2);
+                    return false;
+                }
+            }
+        } else {
+                if (item.get(keys[i]) !== objectLiteral[keys[i]]) {
+                    console.log(3);
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
 
 QUnit.test("BasicFunctionality", function(assert){
     assert.throws(
@@ -435,5 +483,100 @@ QUnit.test("badSearchQueries", function(assert){
 
 
 // ==========================  TestRemove ============================ \\
+QUnit.module("createLibrary::testRemove",  {
+    beforeEach: function(){
+        library = [];
+        library = createLibrary();
+
+        var item1 = {type:'book', author:'sherif', title:'Unit Testing vs Religion'};
+        var item2 = {type:'book', author:'davin', title:"One Test a day mitigates customer dismay"};
+        var item3 = {type:'book', author:'sherif', title:"Design choices: Hardcoding vs not meeting the deadline"};
+        var item4 = {type:'music', artist:'Abott', title:'As Real as it gets'}; //it's funny because his research area is real analysis
+        var item5 = {type:'music', artist:['Scharstein','Abott', 'Velez'], title:'The Best of the Doughboys'};
+        var item6 = {type:'music', artist:'Metallica', title:'Old McDonald had a farm'};
+        var item7 = {type:'video', director:'Spielbro', title:"spooks"};
+        var item8 = {type:'video', director:'Tarantino', title:"The goriest gory movie ever which I am not going to explain on any interview"};
+        var item9 = {type:'video', director:'Kaizer Chiefs', title:"Kaizer Phfizer"};
+
+        library.add(item1);
+        library.add(item2);
+        library.add(item3);
+        library.add(item4);
+        library.add(item5);
+        library.add(item6);
+        library.add(item7);
+        library.add(item8);
+        library.add(item9);
+    }
+});
+
+QUnit.test("RemoveSpecificItems", function(assert){
+    //remove a specific book
+    var item1 = {type:'book', author:'sherif', title:'Unit Testing vs Religion'};
+    var one = library.remove(item1);    
+    var books = library.find({type: "book"});
+    assert.equal(books.length, 2, "Books remaining after remove specific item");
+    assert.ok(itemEquals(one[0], item1), "Check if the book we remove is the correct one");
+
+    //remove a specific music
+    var item2 = {type:'music', artist:'Metallica', title:'Old McDonald had a farm'};
+    var two = library.remove(item2);    
+    var music = library.find({type: "music"});
+    assert.equal(music.length, 2, "Music remaining after remove specific item");
+    assert.ok(itemEquals(two[0], item2), "Check if the music we remove is the correct one");
+
+    //remove a specific video
+    var item3 = {type:'video', director:'Kaizer Chiefs', title:"Kaizer Phfizer"};    
+    var three = library.remove(item3);    
+    var video = library.find({type: "video"});
+    assert.equal(video.length, 2, "Videos remaining after remove specific item");
+    assert.ok(itemEquals(three[0], item3), "Check if the video we remove is the correct one");
+
+    //remove specific attributes
+    var item4 = {title: "spooks"}; //title attribute
+    var four = library.remove(item4);
+    video = library.find({type: "video"}); //update video
+    assert.equal(video.length, 1, "Videos remaining after remove specific item");
+    assert.ok(itemEqualsSubset(four[0], item4), "Check if the video we remove is the correct one");
+
+    var item5 = {artist: "Abott"}; 
+    var five = library.remove(item5);
+    music = library.find({type: "music"});
+    assert.equal(music.length, 0, "Music remaining after remove specific item");
+    assert.ok(itemEqualsSubset(five[0], item5), "Check if the music we remove is the correct one");    
+
+});
+
+
+QUnit.test("RemoveMultipleItems", function(assert){
+    //remove multiple books
+    var item1 = {type:'book', author:'sherif'};
+    var one = library.remove(item1);    
+    var books = library.find({type: "book"});
+    assert.equal(books.length, 1, "Books remaining after remove specific item");
+    assert.ok(itemEqualsSubset(one[0], item1), "Check if the book we remove is the correct one");
+    assert.ok(itemEqualsSubset(one[1], item1), "Check if the book we remove is the correct one");
+
+    //remove multiple music
+    var item2 = {type:'music'};
+    var two = library.remove(item2);    
+    var music = library.find({type: "music"});
+    assert.equal(music.length, 0, "Books remaining after remove specific item");
+    assert.ok(itemEqualsSubset(two[0], item2), "Check if the music we remove is the correct one");
+    assert.ok(itemEqualsSubset(two[1], item2), "Check if the music we remove is the correct one");
+    assert.ok(itemEqualsSubset(two[2], item2), "Check if the music we remove is the correct one");
+
+    //remove multiple videos
+    var item3 = {type:'video'};
+    var three = library.remove(item3);    
+    var video = library.find({type: "video"});
+    assert.equal(video.length, 0, "Books remaining after remove specific item");
+    assert.ok(itemEqualsSubset(two[0], item2), "Check if the video we remove is the correct one");
+    assert.ok(itemEqualsSubset(two[1], item2), "Check if the video we remove is the correct one");
+    assert.ok(itemEqualsSubset(two[2], item2), "Check if the video we remove is the correct one");
+
+
+});
+
 
 
