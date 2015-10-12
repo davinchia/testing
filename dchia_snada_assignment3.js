@@ -410,15 +410,10 @@ QUnit.test("findAllObjectsWithProperties", function(assert){
 });
 
 QUnit.test("badSearchQueries", function(assert){
-<<<<<<< HEAD
-    var query1 = [];
-    var query2 = {};
-});
 
-=======
     var emptySearch = library.find({});
 
     var nonExistentItem = library.find({artist:"Snoop Dogg"});
     assert.equal(nonExistentItem.length, 0, "Find nonExistentItem");
 });
->>>>>>> 04b1974bee500586e0daa330c32a22008843d2bd
+
