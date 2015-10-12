@@ -1,7 +1,7 @@
 //checks if the vector is a vector type; used to check add and sub functions
 //this assumes that 
 function testEqualVector(vec, x, y) {
-  if (Object.keys(vec).sort().toString() != "add,len,getX,getY,sub") {
+  if (Object.keys(vec).sort().toString() != "add,getX,getY,len,sub") {
     return false;
   }
   if (vec.getX() != x) {
