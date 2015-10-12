@@ -182,10 +182,9 @@ QUnit.test("vector tests", function(assert){
 
 
 QUnit.module("createLibrary::testAdd", 
-       {beforeEach: function(){
-                                  library = [];
-                                  library = createLibrary();}
-       }
+       {beforeEach: function(){library = undefined;library = createLibrary();}
+         // , afterEach:function(){library = undefined;}
+        }
 );
 
 
@@ -197,10 +196,9 @@ QUnit.module("createLibrary::testAdd",
  * @return true if item and objectLiteral have the exact same properties and values for those properties.
  */
 var itemEquals = function(item, objectLiteral){
-    var out = false;
     var keys = Object.keys(objectLiteral);
 
-    if(item.properties().toString() !== keys.toString())
+    if(item.properties().sort().toString() !== keys.sort().toString())
         return false;
 
     for(var i = 0; i < keys.length; i++){
@@ -319,7 +317,7 @@ QUnit.test("mergeItemWithArrayProperty", function(assert){
     library.add(item);
     retrieved = library.find({type:'music'});
     assert.equal(retrieved.length, 1, "No duplicate was created");
-    assert.ok(assert.ok(itemEquals(retrieved[0], item), "Verify properties are the same"));
+    assert.ok(itemEquals(retrieved[0], item), "Verify properties are the same");
 });
 
 QUnit.test("collisionCreatesNewItem", function(assert){
@@ -335,15 +333,17 @@ QUnit.test("collisionCreatesNewItem", function(assert){
 });
 
 QUnit.test("propertyIsSubsetOfPropertyArrayCreatesNewItem", function(assert){
-    var item = {type:'book', author:['sherif','davin']};
+    var item = { type:'book', author:['sherif','davin'] };
     library.add(item);
-    var retrieved = library.find(item);
-    assert.notDeepEqual(retrieved, [], 'Verify that object was successfully added');    
+    var retrieved = library.find(item);   
     assert.equal(retrieved.length, 1, 'Verify that nothing other than the object is in the library');
 
+    console.log(library.find({author:'sherif'}));
     var subset = {type:'book', author:'sherif'};
     library.add(subset);
     retrieved = library.find(subset);
+    glob = library.find(subset);
+    console.log(retrieved);
     assert.equal(retrieved.length, 2, "Verify that two records have now been created");
 });
 
@@ -406,9 +406,12 @@ QUnit.test("findAllObjectsWithProperties", function(assert){
 
     var musicByAbott = library.find({artist:"Abott"});
     assert.equal(musicByAbott.length, 2, "Find artist who is member of a group");
+
 });
 
 QUnit.test("badSearchQueries", function(assert){
-    var query1 = [];
-    var query2 = {};
+    var emptySearch = library.find({});
+
+    var nonExistentItem = library.find({artist:"Snoop Dogg"});
+    assert.equal(nonExistentItem.length, 0, "Find nonExistentItem");
 });
