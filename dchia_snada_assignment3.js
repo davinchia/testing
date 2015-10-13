@@ -331,7 +331,7 @@ QUnit.test("BasicFunctionality", function(assert){
     );
 });
 
-QUnit.test("changeUndefinedToUnknown", function(assert){
+QUnit.test("addUnknownEssentialProperties", function(assert){
     library.add({type:'music'});
     library.add({type:'book'});
     library.add({type:'video', year:undefined});
@@ -345,10 +345,23 @@ QUnit.test("changeUndefinedToUnknown", function(assert){
     assert.equal(book[0].get("author"), "unknown", "test unknown book author");
 
     var video = library.find({type:'video'});
-    console.log("video: " + video[0].get("title"));
     assert.equal(video[0].get("title"),"unknown","test unknown video title");
     assert.equal(video[0].get("director"), "unknown", "test unknown video director");
     assert.equal(video[0].get("year"), "unknown", "test unknown video year");
+});
+
+QUnit.test("addChangeUndefinedToUnknown", function(assert){
+    library.add({type:'music', artist:'Bono', title:undefined});
+    library.add({type:'book', author:undefined})
+    library.add({type:'video', year:undefined});
+    
+    var music = library.find({type:'music'});
+    var book = library.find({type:'book'});
+    var video = library.find({type:'video'});
+
+    assert.equal(book[0].get("author"), "unknown", "test change undefined author to unknown");
+    assert.equal(music[0].get("title"), "unknown", "test change undefined title to unknown");
+    assert.equal(video[0].get("year"), "unknown", "test change undefined property to unknown");
 });
 
 QUnit.test("MultipleAuthors", function(assert){
@@ -440,42 +453,62 @@ QUnit.module("createLibrary::testFind",  {
         var item8 = {type:'video', director:'Tarantino', title:"The goriest gory movie ever which I am not going to explain on any interview"};
         var item9 = {type:'video', director:'Kaizer Chiefs', title:"Kaizer Phfizer"};
 
-        library.add(item1);
-        library.add(item2);
-        library.add(item3);
-        library.add(item4);
-        library.add(item5);
-        library.add(item6);
-        library.add(item7);
-        library.add(item8);
-        library.add(item9);
+        items = [item1, item2, item3, item4, item5, item6, item7, item8, item9];
+
+        items.forEach(function(currentItem){
+          library.add(currentItem);
+        });
     }
+});
+
+QUnit.test("findExactMatches", function(assert){
+    //find each item individually and verify it's the only thing returned
+    items.forEach(function(currentItem, i){
+      var searchResult = library.find(currentItem);
+      assert.ok(itemEquals(searchResult[0], currentItem), "Find item " + i);
+      assert.equal(searchResult.length, 1, "Confirm that only item " + i + " is returned");
+    });
 });
 
 QUnit.test("findAllObjectsWithProperties", function(assert){
     //find original object
     var booksBySherif = library.find({author:'sherif'});
     assert.equal(booksBySherif.length, 2, "Find by author property");
-
-    var UTSAndReligion = library.find({author:'sherif', title:'Unit Testing vs Religion'});
-    assert.equal(UTSAndReligion.length, 1, "Find by author and title properties", "Test ");
-    assert.equal(UTSAndReligion[0].get("title"), "Unit Testing vs Religion", "Test get title property");
+    
+    var book = {author:'sherif', title:'Unit Testing vs Religion'};
+    var UTSAndReligion = library.find(book);
+    assert.equal(UTSAndReligion.length, 1, "Find by author and title properties");
+    assert.ok(itemEqualsSubset(UTSAndReligion[0], book));
 
     var allBooks = library.find({type:'book'});
-    assert.equal(allBooks.length, 3, "Find by book type property");
+    assert.equal(allBooks.length, 3, "Find by book type property - Correct number of books");
+    allBooks.forEach(function(currentItem){ assert.equal(currentItem.get("type"), "book");});
 
     var allMusic = library.find({type:'music'});
-    assert.equal(allMusic.length, 3, "Find by music type property");
+    assert.equal(allMusic.length, 3, "Find by music type property - Correct number of music");
+    allMusic.forEach(function(currentItem){ assert.equal(currentItem.get("type"), "music");});
 
     var allVideos = library.find({type:'video'});
-    assert.equal(allVideos.length, 3, "Find by music type property");
+    assert.equal(allVideos.length, 3, "Find by video type property - Correct number of video");
+    allVideos.forEach(function(currentItem){ assert.equal(currentItem.get("type"), "video");});
 
     var musicByAbott = library.find({artist:"Abott"});
-    assert.equal(musicByAbott.length, 2, "Find artist who is member of a group");
+    assert.equal(musicByAbott.length, 2, "Find by searching for property which is both a singleton and contained in a list");
 });
 
 QUnit.test("badSearchQueries", function(assert){
     var emptySearch = library.find({});
+    assert.equal(emptySearch.length, 0, "Find empty object");
+
+    //These have uncovered a bug. In Sherif's code, library returns items when 
+    //they form a superset of the property we search for.
+    //i.e: searching for title "Hello" would return a item titled "Hello There"
+    var findSpace = library.find({title:' '});
+    assert.equal(findSpace.length, 0, "Find by title: ' ' (whitespace)");
+
+    var findSubset = library.find({title:'Religion'});
+    assert.equal(findSubset.length, 0, "Find by a subset of the actual title");
+    // end bug
 
     var nonExistentItem = library.find({artist:"Snoop Dogg"});
     assert.equal(nonExistentItem.length, 0, "Find nonExistentItem");
@@ -518,7 +551,7 @@ QUnit.test("RemoveSpecificItems", function(assert){
     assert.equal(books.length, 2, "Books remaining after remove specific item");
     assert.ok(itemEquals(one[0], item1), "Check if the book we remove is the correct one");
 
-    //remove a specific music
+    //remove specific music
     var item2 = {type:'music', artist:'Metallica', title:'Old McDonald had a farm'};
     var two = library.remove(item2);    
     var music = library.find({type: "music"});
@@ -574,8 +607,6 @@ QUnit.test("RemoveMultipleItems", function(assert){
     assert.ok(itemEqualsSubset(two[0], item2), "Check if the video we remove is the correct one");
     assert.ok(itemEqualsSubset(two[1], item2), "Check if the video we remove is the correct one");
     assert.ok(itemEqualsSubset(two[2], item2), "Check if the video we remove is the correct one");
-
-
 });
 
 
