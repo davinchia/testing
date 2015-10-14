@@ -420,8 +420,8 @@ QUnit.test("propertyIsSubsetOfPropertyArrayCreatesNewItem", function(assert){
     var subset = {type:'book', author:'sherif'};
     library.add(subset);
     retrieved = library.find(subset);
-    glob = library.find(subset);
     console.log(retrieved);
+    console.log("hellooo");
     assert.equal(retrieved.length, 2, "Verify that two records have now been created");
 });
 
@@ -594,7 +594,7 @@ QUnit.test("RemoveMultipleItems", function(assert){
     var item2 = {type:'music'};
     var two = library.remove(item2);    
     var music = library.find({type: "music"});
-    assert.equal(music.length, 0, "Books remaining after remove specific item");
+    assert.equal(music.length, 0, "Music remaining after remove specific item");
     assert.ok(itemEqualsSubset(two[0], item2), "Check if the music we remove is the correct one");
     assert.ok(itemEqualsSubset(two[1], item2), "Check if the music we remove is the correct one");
     assert.ok(itemEqualsSubset(two[2], item2), "Check if the music we remove is the correct one");
@@ -603,7 +603,7 @@ QUnit.test("RemoveMultipleItems", function(assert){
     var item3 = {type:'video'};
     var three = library.remove(item3);    
     var video = library.find({type: "video"});
-    assert.equal(video.length, 0, "Books remaining after remove specific item");
+    assert.equal(video.length, 0, "Videos remaining after remove specific item");
     assert.ok(itemEqualsSubset(two[0], item2), "Check if the video we remove is the correct one");
     assert.ok(itemEqualsSubset(two[1], item2), "Check if the video we remove is the correct one");
     assert.ok(itemEqualsSubset(two[2], item2), "Check if the video we remove is the correct one");

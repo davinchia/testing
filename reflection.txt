@@ -1,0 +1,11 @@
+========================================================
+Part 3 - Partner Evaluation
+
+Davin Chia: 9.000000000000000000001
+Sherif Nada: 9
+
+Davin's tests were thorough and diverse. He created a huge number of tests for the createVector() methods. He tested everything from positive, negative, integers, decimals, and large numbers. They uncovered problems with Sherif's code. Davin learned a lot about percision errors in the process. 
+
+Sherif's tests were comprehensive but not redundant. They covered most edge cases and helped uncover bugs in both of our codes. 
+
+We believe the reason we came up with a comprehensive test suite was because we had made this the topic of conversation for nearly a week, as evident by our Piazza activity. Moreover, when we combined the tests, we utilized a near even mix of both our test cases. During our meeting, we also managed to come up with a couple of test cases which we had not thought of before.

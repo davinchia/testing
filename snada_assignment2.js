@@ -46,6 +46,8 @@ function createLibrary(){
     // and the properties we wish to find in that item
     // returns true if all keys and their values match
     var containsAllProperties = function(item, properties){
+        console.log(item);
+        console.log(properties);
         var keys = Object.keys(properties);
         
         //if we ask for the object with empty properties 
@@ -59,9 +61,20 @@ function createLibrary(){
             if (item.properties().indexOf(keys[i]) < 0)
               return false;
 
-            if(item.get(keys[i]).toString().indexOf(properties[keys[i]].toString()) === -1)
+
+            if(item.get(keys[i]) instanceof Array && properties[keys[i]] instanceof Array){
+              if( item.get(keys[i]).sort().toString() !== properties[keys[i]].sort().toString())
                 return false;
+            }
+            else if (item.get(keys[i]) instanceof Array){
+              if( item.get(keys[i]).indexOf(properties[keys[i]].toString()) === -1)
+                return false;
+            }
+            else if (item.get(keys[i]).toString() !== properties[keys[i]].toString()){
+              return false;
+            }
         }
+
         return true;
     };
   
